@@ -12,11 +12,13 @@ const pontoRoutes = require('./routes/pontoRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes'); 
 const roteiroRoutes = require('./routes/roteiroRoutes');
 const motoristaRoutes = require('./routes/motoristaRoutes');
+const parametroRoutes = require('./routes/parametroRoutes');
 // Rota base para os pontos
 app.use('/api/pontos', pontoRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/roteiros', roteiroRoutes); 
 app.use('/api/motoristas', motoristaRoutes);
+app.use('/api/parametros', parametroRoutes);
 
 // Rota de teste
 app.get('/', (req, res) => {

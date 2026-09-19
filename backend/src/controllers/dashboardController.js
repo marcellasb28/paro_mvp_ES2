@@ -1,32 +1,66 @@
 const pool = require('../config/db');
 
 exports.getResumoDashboard = async (req, res) => {
+  // Pega o motorista_id da URL (ex: /api/dashboard/resumo?motorista_id=2)
+  const { motorista_id } = req.query;
+
+  let filtroSQL = '';
+  let paramsGerais = [];
+
+  // Se veio um ID, preparamos o filtro
+  if (motorista_id) {
+    filtroSQL = 'WHERE motorista_id = ?';
+    paramsGerais.push(motorista_id);
+  }
+
   try {
+    // 1. Gráfico (Geral ou Filtrado)
     const [linhasGrafico] = await pool.query(`
       SELECT DATE_FORMAT(data, '%d/%m') as dia, SUM(tempo_total_parado) as minutos 
-      FROM Roteiro GROUP BY data ORDER BY data ASC LIMIT 5
-    `);
+      FROM Roteiro ${filtroSQL} 
+      GROUP BY data ORDER BY data ASC LIMIT 5
+    `, paramsGerais);
 
+    // 2. Resumo Financeiro (Geral ou Filtrado)
     const [linhasTotal] = await pool.query(`
-      SELECT SUM(tempo_total_parado) as total_minutos, SUM(custo_estimado) as total_custo FROM Roteiro
-    `);
+      SELECT SUM(tempo_total_parado) as total_minutos, SUM(custo_estimado) as total_custo 
+      FROM Roteiro ${filtroSQL}
+    `, paramsGerais);
 
-    // NOVA CONSULTA: Busca o histórico detalhado dos pontos (Exigência RF07)
+    // 3. Histórico: Busca o Roteiro mais recente (Geral ou do Motorista específico)
+    let subQueryHist = 'SELECT MAX(id) FROM Roteiro';
+    let paramsHist = [];
+    if (motorista_id) {
+      subQueryHist += ' WHERE motorista_id = ?';
+      paramsHist.push(motorista_id);
+    }
+
     const [linhasHistorico] = await pool.query(`
       SELECT 
-        ordem_roteiro, 
-        endereco, 
-        DATE_FORMAT(data_hora_chegada, '%H:%i:%s') as chegada, 
-        DATE_FORMAT(data_hora_saida, '%H:%i:%s') as saida, 
-        tempo_parado_calculado as tempo_parado
-      FROM Ponto 
-      WHERE roteiro_id = 1 
-      ORDER BY ordem_roteiro ASC
-    `);
+        p.ordem_roteiro, p.endereco, 
+        DATE_FORMAT(p.data_hora_chegada, '%H:%i:%s') as chegada, 
+        DATE_FORMAT(p.data_hora_saida, '%H:%i:%s') as saida, 
+        p.tempo_parado_calculado as tempo_parado,
+        m.nome as motorista,
+        DATE_FORMAT(r.data, '%d/%m/%Y') as data_roteiro,
+        r.id as roteiro_id
+      FROM Ponto p
+      JOIN Roteiro r ON p.roteiro_id = r.id
+      JOIN Motorista m ON r.motorista_id = m.id
+      WHERE r.id = (${subQueryHist})
+      ORDER BY p.ordem_roteiro ASC
+    `, paramsHist);
+
+    const infoRoteiro = linhasHistorico.length > 0 ? {
+      id: linhasHistorico[0].roteiro_id,
+      motorista: linhasHistorico[0].motorista,
+      data: linhasHistorico[0].data_roteiro
+    } : null;
 
     res.json({
       grafico: linhasGrafico,
-      historico: linhasHistorico, // Enviando o histórico para o React
+      historico: linhasHistorico,
+      infoRoteiro: infoRoteiro,
       resumo: {
         tempoMes: linhasTotal[0].total_minutos || 0,
         custoMes: linhasTotal[0].total_custo || 0

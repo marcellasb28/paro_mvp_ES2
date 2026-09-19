@@ -4,44 +4,62 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 export default function Dashboard() {
   const [dadosGrafico, setDadosGrafico] = useState([]);
   const [historico, setHistorico] = useState([]);
+  const [infoRoteiro, setInfoRoteiro] = useState(null);
   const [resumo, setResumo] = useState({ tempoMes: 0, custoMes: 0 });
   const [loading, setLoading] = useState(true);
   const [calculando, setCalculando] = useState(false);
 
+  // NOVOS ESTADOS PARA O FILTRO
+  const [listaMotoristas, setListaMotoristas] = useState([]);
+  const [filtroId, setFiltroId] = useState('');
+
+  // Busca a lista de motoristas apenas uma vez quando a tela abre
+  useEffect(() => {
+    fetch('http://localhost:3333/api/motoristas')
+      .then(res => res.json())
+      .then(data => setListaMotoristas(data))
+      .catch(err => console.error('Erro ao buscar motoristas:', err));
+  }, []);
+
+  // Agora a função de carga escuta o filtroId
   const carregarDados = useCallback(async () => {
+    setLoading(true);
     try {
-      const response = await fetch('http://localhost:3333/api/dashboard/resumo');
+      const url = filtroId 
+        ? `http://localhost:3333/api/dashboard/resumo?motorista_id=${filtroId}`
+        : 'http://localhost:3333/api/dashboard/resumo';
+
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
         setDadosGrafico(data.grafico);
         setHistorico(data.historico);
         setResumo(data.resumo);
+        setInfoRoteiro(data.infoRoteiro);
       }
     } catch (error) {
       console.error('Erro ao buscar dados:', error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filtroId]); // Toda vez que o filtro muda, essa função recria
 
   useEffect(() => {
     // eslint-disable-next-line
     carregarDados();
-  }, [carregarDados]);
+  }, [carregarDados]); // Aciona o recarregamento da tela
 
   const calcularCustoFinal = async () => {
+    if (!infoRoteiro) return alert('Nenhum roteiro para calcular.');
     setCalculando(true);
     try {
-      const response = await fetch('http://localhost:3333/api/roteiros/1/calcular-custo', {
-        method: 'PUT'
-      });
+      const response = await fetch(`http://localhost:3333/api/roteiros/${infoRoteiro.id}/calcular-custo`, { method: 'PUT' });
       if (response.ok) {
-        alert('Custo recalculado com sucesso com base na distância e combustível!');
+        alert('Custo recalculado com base na distância e combustível!');
         await carregarDados(); 
       }
     } catch (error) {
-      // Correção do 'no-unused-vars': agora a variável error está sendo utilizada
-      console.error('Erro de conexão na API de cálculo:', error);
+      console.error('Erro:', error);
       alert('Erro ao calcular custos.');
     } finally {
       setCalculando(false);
@@ -50,7 +68,7 @@ export default function Dashboard() {
 
   return (
     <div style={{ padding: '20px', flex: 1 }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
         <div>
           <h1 style={{ color: 'var(--preto-chumbo)', fontSize: '20px', fontWeight: '900' }}>
             Parô<span style={{ color: 'var(--laranja-paro)' }}>?</span> | Painel
@@ -58,24 +76,35 @@ export default function Dashboard() {
           <p style={{ color: 'var(--cinza-texto)', fontSize: '12px' }}>Visão Geral de Paradas</p>
         </div>
         
-        {/* BOTÃO DE CÁLCULO FINANCEIRO */}
-        <button 
-          onClick={calcularCustoFinal}
-          disabled={calculando}
-          style={{
-            backgroundColor: 'var(--preto-chumbo)', color: '#fff', border: 'none',
-            padding: '10px 15px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer'
-          }}
-        >
-          {calculando ? 'Calculando...' : 'Calcular Custo do Roteiro'}
-        </button>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {/* NOVO: CAIXA DE SELEÇÃO DO FILTRO */}
+          <select 
+            value={filtroId} 
+            onChange={(e) => setFiltroId(e.target.value)}
+            style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc', backgroundColor: '#fff', outline: 'none' }}
+          >
+            <option value="">🌎 Visão Global (Toda a Frota)</option>
+            {listaMotoristas.map(m => (
+              <option key={m.id} value={m.id}>👤 {m.nome}</option>
+            ))}
+          </select>
+
+          <button 
+            onClick={calcularCustoFinal} disabled={calculando}
+            style={{
+              backgroundColor: 'var(--preto-chumbo)', color: '#fff', border: 'none',
+              padding: '10px 15px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer'
+            }}
+          >
+            {calculando ? 'Calculando...' : 'Calcular Custo'}
+          </button>
+        </div>
       </header>
 
       {loading ? (
-        <p style={{ textAlign: 'center', marginTop: '50px' }}>Carregando painel...</p>
+        <p style={{ textAlign: 'center', marginTop: '50px' }}>Carregando dados...</p>
       ) : (
         <>
-          {/* Cards de Resumo */}
           <div style={{ display: 'flex', gap: '10px', marginBottom: '30px' }}>
             <div style={{ flex: 1, backgroundColor: 'var(--cinza-fundo)', padding: '15px', borderRadius: '8px' }}>
               <p style={{ fontSize: '12px', color: 'var(--cinza-texto)' }}>Tempo Total</p>
@@ -89,7 +118,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Gráfico */}
           <div style={{ backgroundColor: '#fff', padding: '10px 0', borderRadius: '8px', border: '1px solid #eaeaea', marginBottom: '20px' }}>
             <h3 style={{ fontSize: '14px', margin: '0 0 15px 15px', color: 'var(--preto-chumbo)' }}>Tempo Parado (Por dia)</h3>
             <ResponsiveContainer width="100%" height={200}>
@@ -103,9 +131,15 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </div>
 
-          {/* NOVO: Tabela de Histórico (RF07) */}
           <div style={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #eaeaea', overflow: 'hidden' }}>
-            <h3 style={{ fontSize: '14px', margin: '15px', color: 'var(--preto-chumbo)' }}>Histórico de Paradas do Dia</h3>
+            <div style={{ padding: '15px', backgroundColor: 'var(--cinza-fundo)', borderBottom: '1px solid #eaeaea', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: '14px', color: 'var(--preto-chumbo)', margin: 0 }}>Histórico do Último Roteiro</h3>
+              {infoRoteiro && (
+                <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--laranja-paro)' }}>
+                  👤 Motorista: {infoRoteiro.motorista} | 📅 Data: {infoRoteiro.data}
+                </span>
+              )}
+            </div>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
               <thead style={{ backgroundColor: 'var(--cinza-fundo)' }}>
                 <tr>
@@ -117,17 +151,17 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {historico.map((item, index) => (
+                {historico.length > 0 ? historico.map((item, index) => (
                   <tr key={index} style={{ borderTop: '1px solid #eaeaea' }}>
                     <td style={{ padding: '10px 15px', fontWeight: 'bold' }}>{item.ordem_roteiro}</td>
                     <td style={{ padding: '10px 15px' }}>{item.endereco}</td>
                     <td style={{ padding: '10px 15px' }}>{item.chegada || '--'}</td>
                     <td style={{ padding: '10px 15px' }}>{item.saida || '--'}</td>
-                    <td style={{ padding: '10px 15px', color: 'var(--laranja-paro)', fontWeight: 'bold' }}>
-                      {item.tempo_parado} min
-                    </td>
+                    <td style={{ padding: '10px 15px', color: 'var(--laranja-paro)', fontWeight: 'bold' }}>{item.tempo_parado} min</td>
                   </tr>
-                ))}
+                )) : (
+                  <tr><td colSpan="5" style={{ padding: '20px', textAlign: 'center' }}>Nenhum histórico encontrado para este motorista.</td></tr>
+                )}
               </tbody>
             </table>
           </div>

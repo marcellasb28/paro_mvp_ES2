@@ -5,12 +5,13 @@ import CadastroMotorista from './pages/CadastroMotorista';
 import MontagemRoteiro from './pages/MontagemRoteiro';
 import Home from './pages/Home';
 import MenuGerente from './components/MenuGerente';
+import Parametrizacao from './pages/Parametrizacao';
 
 function LayoutApp() {
   const location = useLocation();
-  const rotasGerente = ['/dashboard', '/cadastro-motorista', '/montagem-roteiro'];
+  const rotasGerente = ['/dashboard', '/cadastro-motorista', '/montagem-roteiro', '/parametros'];
   const mostrarMenu = rotasGerente.includes(location.pathname);
-
+  
   return (
     <div className="app-container" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
       {mostrarMenu && <MenuGerente />}
@@ -21,6 +22,7 @@ function LayoutApp() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/cadastro-motorista" element={<CadastroMotorista />} />
           <Route path="/montagem-roteiro" element={<MontagemRoteiro />} />
+          <Route path="/parametros" element={<Parametrizacao />} />
         </Routes>
       </div>
     </div>
