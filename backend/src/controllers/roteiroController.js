@@ -53,3 +53,38 @@ exports.calcularCustoRoteiro = async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor ao calcular custos.' });
   }
 };
+
+exports.criarRoteiro = async (req, res) => {
+  const { motorista_id, data, distancia_total, pontos } = req.body;
+  const connection = await pool.getConnection(); // Usamos uma conexão específica para a transação
+  
+  try {
+    await connection.beginTransaction(); // Inicia a transação segura
+
+    // 1. Cria o Roteiro principal
+    const [resultadoRoteiro] = await connection.query(
+      'INSERT INTO Roteiro (data, motorista_id, distancia_total) VALUES (?, ?, ?)',
+      [data, motorista_id, distancia_total]
+    );
+    
+    const roteiroId = resultadoRoteiro.insertId;
+
+    // 2. Salva todos os Pontos vinculados a esse Roteiro
+    for (let i = 0; i < pontos.length; i++) {
+      await connection.query(
+        'INSERT INTO Ponto (roteiro_id, ordem_roteiro, endereco) VALUES (?, ?, ?)',
+        [roteiroId, i + 1, pontos[i].endereco]
+      );
+    }
+
+    await connection.commit(); // Confirma a gravação no banco
+    res.status(201).json({ message: 'Roteiro e Pontos criados com sucesso!', roteiroId });
+    
+  } catch (error) {
+    await connection.rollback(); // Se der erro em qualquer ponto, desfaz tudo
+    console.error('Erro ao montar roteiro:', error);
+    res.status(500).json({ error: 'Erro interno ao salvar roteiro.' });
+  } finally {
+    connection.release();
+  }
+};
