@@ -7,7 +7,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Rota de teste para garantir que a API está no ar
+// Importação das rotas
+const pontoRoutes = require('./routes/pontoRoutes');
+
+// Rota base para os pontos
+app.use('/api/pontos', pontoRoutes);
+
+// Rota de teste
 app.get('/', (req, res) => {
   res.json({ message: 'API do Parô? rodando sobre rodas!' });
 });
