@@ -9,9 +9,12 @@ app.use(express.json());
 
 // Importação das rotas
 const pontoRoutes = require('./routes/pontoRoutes');
-
+const dashboardRoutes = require('./routes/dashboardRoutes'); 
+const roteiroRoutes = require('./routes/roteiroRoutes');
 // Rota base para os pontos
 app.use('/api/pontos', pontoRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/roteiros', roteiroRoutes); 
 
 // Rota de teste
 app.get('/', (req, res) => {
