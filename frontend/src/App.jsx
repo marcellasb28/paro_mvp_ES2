@@ -1,16 +1,14 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import RegistroPonto from './pages/RegistroPonto';
+import Dashboard from './pages/Dashboard'; // Importação nova
 
 function App() {
   return (
     <Router>
       <div className="app-container">
         <Routes>
-          {/* A rota principal vai direto para a tela do Motoboy no MVP */}
           <Route path="/" element={<RegistroPonto />} />
-          
-          {/* Deixando o espaço pronto para a tela do Gerente */}
-          {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </div>
     </Router>
