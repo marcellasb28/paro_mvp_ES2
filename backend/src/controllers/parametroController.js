@@ -14,7 +14,7 @@ exports.getParametros = async (req, res) => {
 };
 
 exports.updateParametros = async (req, res) => {
-  const { valor_combustivel, custo_por_km, km_litro_veiculo, jornada_trabalho_horas } = req.body;
+  const { valor_combustivel, custo_por_km, km_litro_veiculo, jornada_padrao } = req.body;
   
   try {
     // Atualizamos a primeira linha (presumindo id = 1)
@@ -23,9 +23,9 @@ exports.updateParametros = async (req, res) => {
         valor_combustivel = ?, 
         custo_por_km = ?, 
         km_litro_veiculo = ?, 
-        jornada_trabalho_horas = ? 
+        jornada_padrao = ? 
        WHERE id = 1`,
-      [valor_combustivel, custo_por_km, km_litro_veiculo, jornada_trabalho_horas || 8]
+      [valor_combustivel, custo_por_km, km_litro_veiculo, jornada_padrao || 8]
     );
     res.json({ message: 'Parâmetros atualizados com sucesso!' });
   } catch (error) {

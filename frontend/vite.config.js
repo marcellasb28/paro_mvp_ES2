@@ -7,19 +7,17 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      devOptions: {
-        enabled: true // Permite testar o PWA rodando localmente
-      },
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'Parô? | Gestão de Tempo',
+        name: 'Parô? Logística',
         short_name: 'Parô?',
-        description: 'Sistema de Monitoramento de Tempo Parado em Roteiros',
-        theme_color: '#F58220', // O laranja alerta da nossa logo
+        description: 'Gestão de paradas e roteiros logísticos.',
+        theme_color: '#333333', // Cor do seu tema escuro (preto chumbo)
         background_color: '#ffffff',
-        display: 'standalone',
+        display: 'standalone', // Isso tira a barra de endereço do navegador no celular!
         icons: [
           {
-            src: '/icon-192x192.png', // Precisaremos colocar a logo na pasta public depois
+            src: '/icon-192x192.png',
             sizes: '192x192',
             type: 'image/png'
           },

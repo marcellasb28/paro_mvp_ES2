@@ -5,7 +5,7 @@ export default function Parametrizacao() {
     valor_combustivel: '',
     custo_por_km: '',
     km_litro_veiculo: '',
-    jornada_trabalho_horas: ''
+    jornada_padrao: '' // Alterado aqui
   });
   const [loading, setLoading] = useState(false);
   const [buscando, setBuscando] = useState(true);
@@ -18,7 +18,7 @@ export default function Parametrizacao() {
           valor_combustivel: data.valor_combustivel || '',
           custo_por_km: data.custo_por_km || '',
           km_litro_veiculo: data.km_litro_veiculo || '',
-          jornada_trabalho_horas: data.jornada_trabalho_horas || 8
+          jornada_padrao: data.jornada_padrao || 8 // Alterado aqui
         });
       })
       .catch(err => console.error('Erro ao buscar parâmetros:', err))
@@ -41,7 +41,7 @@ export default function Parametrizacao() {
           valor_combustivel: parseFloat(String(formData.valor_combustivel).replace(',', '.')),
           custo_por_km: parseFloat(String(formData.custo_por_km).replace(',', '.')),
           km_litro_veiculo: parseFloat(String(formData.km_litro_veiculo).replace(',', '.')),
-          jornada_trabalho_horas: parseInt(formData.jornada_trabalho_horas, 10)
+          jornada_padrao: parseInt(formData.jornada_padrao, 10) // Alterado aqui
         })
       });
 
@@ -73,7 +73,7 @@ export default function Parametrizacao() {
         <div>
           <label style={{ display: 'block', fontSize: '14px', marginBottom: '5px', fontWeight: 'bold' }}>Valor do Combustível (R$/litro)</label>
           <input 
-            type="number" step="0.01" name="valor_combustivel" value={formData.valor_combustivel} onChange={handleChange} required
+            type="text" name="valor_combustivel" value={formData.valor_combustivel} onChange={handleChange} required
             style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }}
           />
         </div>
@@ -81,7 +81,7 @@ export default function Parametrizacao() {
         <div>
           <label style={{ display: 'block', fontSize: '14px', marginBottom: '5px', fontWeight: 'bold' }}>Custo Fixo por KM (R$/km)</label>
           <input 
-            type="number" step="0.01" name="custo_por_km" value={formData.custo_por_km} onChange={handleChange} required
+            type="text" name="custo_por_km" value={formData.custo_por_km} onChange={handleChange} required
             style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }}
           />
         </div>
@@ -90,7 +90,7 @@ export default function Parametrizacao() {
           <label style={{ display: 'block', fontSize: '14px', marginBottom: '5px', fontWeight: 'bold' }}>Rendimento Padrão da Frota (km/l)</label>
           <p style={{ fontSize: '11px', color: 'var(--cinza-texto)', marginTop: 0 }}>*Usado caso o motorista não tenha rendimento específico cadastrado.</p>
           <input 
-            type="number" step="0.1" name="km_litro_veiculo" value={formData.km_litro_veiculo} onChange={handleChange} required
+            type="text" name="km_litro_veiculo" value={formData.km_litro_veiculo} onChange={handleChange} required
             style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }}
           />
         </div>
@@ -98,7 +98,7 @@ export default function Parametrizacao() {
         <div>
           <label style={{ display: 'block', fontSize: '14px', marginBottom: '5px', fontWeight: 'bold' }}>Jornada Diária de Trabalho (Horas)</label>
           <input 
-            type="number" name="jornada_trabalho_horas" value={formData.jornada_trabalho_horas} onChange={handleChange} required
+            type="number" name="jornada_padrao" value={formData.jornada_padrao} onChange={handleChange} required
             style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }}
           />
         </div>
@@ -107,7 +107,7 @@ export default function Parametrizacao() {
           type="submit" disabled={loading}
           style={{
             marginTop: '10px', padding: '15px', fontSize: '16px', fontWeight: 'bold', color: '#fff',
-            backgroundColor: loading ? '#ccc' : 'var(--preto-chumbo)', border: 'none', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer'
+            backgroundColor: loading ? '#ccc' : 'var(--laranja-paro)', border: 'none', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer'
           }}
         >
           {loading ? 'Salvando...' : 'Atualizar Parâmetros'}
